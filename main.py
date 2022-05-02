@@ -20,9 +20,11 @@ class File:
     def __init__(self, path: str):
         self.path: str = path
         self.name: str = os.path.basename(os.path.normpath(path))
-        self.hash: str = self._hash()
+        self._hash: str | None = None
 
-    def _hash(self) -> str:
+    def hash(self) -> str:
+        if self._hash != None:
+            return self._hash
         sha1 = hashlib.sha1()
         with open(self.path, 'rb') as file:
             while True:
@@ -30,10 +32,11 @@ class File:
                 if not data:
                     break
                 sha1.update(data)
-        return sha1.hexdigest()
+        self._hash = sha1.hexdigest()
+        return self._hash
 
     def print_pretty(self, shift=0):
-        print_shifted(shift, f"{self.name}\t\t{self.hash}")
+        print_shifted(shift, f"{self.name}\t\t{self.hash()}")
 
 
 
@@ -49,20 +52,20 @@ class Folder:
                     self.folders.append(Folder(folder.path))
                 case file if entry.is_file():
                     self.files.append(File(file.path))
-        self.hash: str = self._hash()
+        self._hash: str | None = None
 
-    def _hash(self):
+    def hash(self):
+        if self._hash != None:
+            return self._hash
         sha1 = hashlib.sha1()
         for file in self.files:
-            # print(f"{file.path=}\t{file.hash=}")
-            data: bytes = bytes(file.hash, 'utf-8')
+            data: bytes = bytes(file.hash(), 'utf-8')
             sha1.update(data)
-        sha1_str: str = sha1.hexdigest()
-        # print(f"{self.path=}\t{sha1_str=}")
-        return sha1_str
+        self._hash = sha1.hexdigest()
+        return self._hash
 
     def print_pretty(self, shift=0):
-        print_shifted(shift, f"{self.name}\t\t{self.hash}")
+        print_shifted(shift, f"{self.name}\t\t{self.hash()}")
         for folder in self.folders:
             folder.print_pretty(shift+1)
         for file in self.files:
@@ -88,8 +91,8 @@ def main() -> None:
     folder_from.print_pretty()
     folder_to.print_pretty()
 
-    print(folder_from.hash)
-    print(folder_to.hash)
+    print(folder_from.hash())
+    print(folder_to.hash())
 
 
 
