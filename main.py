@@ -4,9 +4,15 @@ import os
 import sys
 import hashlib
 
+from typing import NewType
+
 
 
 BUF_SIZE = 2**16
+
+
+
+Hash = NewType("Hash", str)
 
 
 
@@ -20,9 +26,9 @@ class File:
     def __init__(self, path: str):
         self.path: str = path
         self.name: str = os.path.basename(os.path.normpath(path))
-        self._hash: str | None = None
+        self._hash: Hash | None = None
 
-    def hash(self) -> str:
+    def hash(self) -> Hash:
         if self._hash != None:
             return self._hash
         sha1 = hashlib.sha1()
@@ -32,7 +38,7 @@ class File:
                 if not data:
                     break
                 sha1.update(data)
-        self._hash = sha1.hexdigest()
+        self._hash = Hash(sha1.hexdigest())
         return self._hash
 
     def print_pretty(self, shift=0):
@@ -52,16 +58,16 @@ class Folder:
                     self.folders.append(Folder(folder.path))
                 case file if entry.is_file():
                     self.files.append(File(file.path))
-        self._hash: str | None = None
+        self._hash: Hash | None = None
 
-    def hash(self):
+    def hash(self) -> Hash:
         if self._hash != None:
             return self._hash
         sha1 = hashlib.sha1()
         for file in self.files:
             data: bytes = bytes(file.hash(), 'utf-8')
             sha1.update(data)
-        self._hash = sha1.hexdigest()
+        self._hash = Hash(sha1.hexdigest())
         return self._hash
 
     def print_pretty(self, shift=0):
